@@ -32,9 +32,9 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
 
 ## Architecture
 
-- **ECU core**: Speeduino firmware (forked) running on Teensy 4.1 — fuel and spark control, injector drivers, coil driver via BIP373
-- **Sensors**: RPM (HEI tach wire), MAP, coolant temp, intake air temp, TPS, battery voltage, wideband AFR (14Point7 Spartan 3 Lite UART), EGT (MAX31855 + K-type thermocouple), oil pressure (SMX Cummins HD via ADS1115)
-- **Self-tuning loop**: conservative learning algorithm with hard cell limits, minimum sample counts, and lean-limit cutoff — runs on the Teensy alongside fuel math, no laptop required
+- **ECU core**: upstream Speeduino firmware (git submodule at `third_party/speeduino`, pinned to tag `202501`; not forked — see [FORK-NOTES](docs/FORK-NOTES.md)) running on Teensy 4.1 — fuel and spark control, injector drivers, coil driver via BIP373
+- **Sensors**: RPM (HEI tach wire), MAP, coolant temp, intake air temp, TPS, battery voltage, wideband AFR (14Point7 Spartan 3 Lite UART), EGT (MAX31855 + K-type thermocouple), oil pressure (VDO 360-004 sender, 10–180 Ω, plus 87-805605A1 low-oil alarm switch)
+- **Tuning loop (v1: advisory only)**: the AI runs off-Teensy (Mac Studio / iPhone) and only *proposes* cell changes; the Teensy *disposes* via a fixed deterministic validation envelope (max cell delta, spark limits, AFR floor/ceiling, rate limiting) and a hardware lean cutoff independent of software. Every proposal is logged with accept/reject reason. No AI runs on the Teensy.
 - **NMEA 2000**: publishes EngineReading PGNs to the backbone for Ahanu consumption
 - **Gateway**: Speeduino serial protocol on one side, normalized EngineReading objects on Ahanu's UDP JSON / TCP 39150 path on the other
 

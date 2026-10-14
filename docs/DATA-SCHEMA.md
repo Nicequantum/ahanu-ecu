@@ -2,6 +2,8 @@
 
 This is the foundation the Mac Studio model trains on. If we log the wrong fields, the model learns garbage. Version this file and bump `schema_version` on every change.
 
+> **⚠️ All sample rates and resolutions in this document are TARGETS, not measurements.** TODO(hardware): measure actual achievable rates/resolutions on the Dropbear (SD logging throughput, UART wideband update rate, MAX31855 conversion time) once hardware talks, and replace targets with measured values.
+
 **Status:** draft. Sample rates and resolutions are design targets, **not yet measured** on Dropbear hardware. Some fields (per-channel PW, AI proposal records, wideband B, EGT) are **not in stock Speeduino logs** and need firmware or gateway changes. That's the main reason we'd fork (see `FORK-NOTES.md`).
 
 ## Record types
@@ -14,7 +16,7 @@ Every record carries the common header: `schema_version`, `engine_id`, `boot_id`
 
 ## `sample` fields
 
-| Field | Type | Units | Resolution | Sample rate (target) | Retention | Rationale |
+| Field | Type | Units | Resolution (TARGET) | Sample rate (TARGET — TODO measure) | Retention | Rationale |
 |---|---|---|---|---|---|---|
 | timestamp_us | uint64 | µs since epoch (GPS/RTC-synced) | 1 µs | every record | permanent | Aligns both engines and AFR lag; time ordering for training |
 | engine_id | uint8 enum | — | port=0, stbd=1 | every record | permanent | Two engines, one dataset. Assigned at first run |
@@ -35,7 +37,7 @@ Every record carries the common header: `schema_version`, `engine_id`, `boot_id`
 
 ### Recommended additions (not in original field list)
 
-| Field | Type | Units | Resolution | Rate | Retention | Rationale |
+| Field | Type | Units | Resolution (TARGET) | Rate (TARGET) | Retention | Rationale |
 |---|---|---|---|---|---|---|
 | egt_c | int16 | °C | 0.25 °C (MAX31855 native) | 10 Hz | same | Lean/timing danger signal; probe upstream of water injection |
 | egt_fault | uint8 | bitfield (open/short-GND/short-VCC) | — | 10 Hz | same | MAX31855 reports these fault bits |

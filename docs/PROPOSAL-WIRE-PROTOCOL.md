@@ -1,7 +1,7 @@
 # AI Proposal Command: Wire Protocol (v1)
 
 Implementation: `Nicequantum/speeduino`, branch `feat/proposal-command` (fork PR [#1](https://github.com/Nicequantum/speeduino/pull/1), targeting `grok-pilot`).
-- Pure logic: `speeduino/grok_pilot/proposal.{h,cpp}`
+- Pure logic: `speeduino/src/grok_pilot/proposal.{h,cpp}`
 - Glue: `speeduino/grok_pilot_glue.cpp`
 - Command: `comms.cpp` `case 'Y'`
 - Tests: `test/grok_pilot_native/`

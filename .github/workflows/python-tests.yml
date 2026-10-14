@@ -57,7 +57,7 @@ jobs:
           fi
       - name: vendored envelope drift check
         run: |
-          V=third_party/speeduino/speeduino/grok_pilot/envelope.h
+          V=third_party/speeduino/speeduino/src/grok_pilot/envelope.h
           S=firmware/envelope/envelope.h
           if [ -f "$V" ] && [ -f "$S" ]; then
             want=$(grep -oE '[0-9a-f]{64}' "$V" | head -1)

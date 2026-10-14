@@ -1,4 +1,4 @@
-name: python-tests
+name: tests
 on:
   push:
     branches: [main]
@@ -17,6 +17,27 @@ jobs:
       - run: pip install -e ".[test]"
       - run: pytest -q
       - run: python -m grok_pilot.stress --samples 3000
+  envelope-cpp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y cmake g++ libgtest-dev
+      - run: cmake -S firmware/envelope -B build/envelope -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build/envelope -j
+      - run: ctest --test-dir build/envelope --output-on-failure
+  envelope-teensy41:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-teensy41-v1
+      - run: pip install platformio
+      - run: pio run -d firmware/envelope/pio -e teensy41
   fork-proposal-tests:
     # Runs the Nicequantum/speeduino grok_pilot native tests at the pinned submodule
     # commit (skipped until the pin includes them), and checks the vendored envelope

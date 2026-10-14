@@ -11,12 +11,17 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
   - Spec: [PROPOSAL-WIRE-PROTOCOL](docs/PROPOSAL-WIRE-PROTOCOL.md).
   - Blocked on merging the envelope PR [#12](https://github.com/Nicequantum/ahanu-ecu/pull/12) (branch `feat/envelope-cpp`, draft) first, and on bench verification.
 - ✅ The zero-hardware Ardu-Stim bench procedure is written. The hardware loop is not run yet (no hardware).
-- ✅ **Software-only logic in [`src/grok_pilot`](src/README.md)** (Python, 137 pytest tests, CI in `.github/workflows/python-tests.yml`):
+- ✅ **Software-only logic in [`src/grok_pilot`](src/README.md)** (Python, 139 pytest tests, CI in `.github/workflows/python-tests.yml`):
   - deterministic validation envelope, with adversarial and boundary tests
   - staged curriculum state machine: cold_start → warm_idle → cruise → load_test, green/yellow/red status, aborts and regressions
   - log schema v0.2 validator and a synthetic dual-engine log generator ([stress test](docs/SCHEMA-STRESS-TEST.md))
   - Grok integration API: prompt, context, response JSON Schema, and gateway checks
 - ✅ Teensy log schema is at **v0.2**. All rates and resolutions are still targets.
+- 🔧 **Envelope C++ port (#7), on branch `feat/envelope-cpp` with a draft PR, not merged:**
+  - Header-only `firmware/envelope/envelope.h` with no heap, exceptions or RTTI, about 43 KB of static RAM.
+  - Results: 28 GoogleTest tests pass; the cross-check against Python-generated vectors gives 6,543 steps with **0 mismatches**; the Teensy 4.1 PlatformIO build compiles.
+  - Not yet wired into Speeduino's map-write path. That needs a fork (#11). See [ENVELOPE-CPP-PORT](docs/ENVELOPE-CPP-PORT.md).
+- ⚠️ **Wideband UART divider corrected** to 10k top / 20k bottom (≈ 3.33 V). The old 10k/2k gave ≈ 0.83 V. This is a pending hardware change; see [WIRING-NOTES](docs/WIRING-NOTES.md) and #4.
 - ⏳ No custom firmware yet. The envelope must still be ported to the Teensy (#7). AI is advisory only in v1.
 - Run the tests: `pip install -e ".[test]" && pytest -q`
 
@@ -36,6 +41,8 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
 - [Schema stress test](docs/SCHEMA-STRESS-TEST.md)
 - [Grok integration API](docs/GROK-INTEGRATION-API.md) · [response JSON Schema](src/grok_pilot/schemas/proposal-response.v1.schema.json)
 - [Python package README](src/README.md)
+- [Envelope C++ port](docs/ENVELOPE-CPP-PORT.md)
+- [Wiring notes (wideband divider)](docs/WIRING-NOTES.md)
 
 ### Issues
 - [#1 Speeduino submodule + Ardu-Stim bench loop](https://github.com/Nicequantum/ahanu-ecu/issues/1)
@@ -48,6 +55,7 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
 - [#8 Schema v0.3 open items](https://github.com/Nicequantum/ahanu-ecu/issues/8)
 - [#9 Calibrate placeholder thresholds from real data](https://github.com/Nicequantum/ahanu-ecu/issues/9)
 - [#10 Per-bank wideband offset model](https://github.com/Nicequantum/ahanu-ecu/issues/10)
+- [#11 Integrate envelope into Speeduino map-write path (fork)](https://github.com/Nicequantum/ahanu-ecu/issues/11)
 
 ## Architecture
 

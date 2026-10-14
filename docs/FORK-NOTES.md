@@ -4,9 +4,9 @@
 
 | Item | Value |
 |---|---|
-| Submodule URL | https://github.com/Nicequantum/speeduino (fork of upstream, created 2026-10-14 UTC; `.gitmodules` branch = `master`) |
+| Submodule URL | https://github.com/Nicequantum/speeduino (fork of upstream, created 2026-10-14 UTC; `.gitmodules` branch = `grok-pilot`) |
 | Upstream | https://github.com/speeduino/Speeduino |
-| Fork contents vs upstream | **Identical**: no marine changes yet (see [speeduino-fork.md](speeduino-fork.md)) |
+| Fork contents vs upstream | `grok-pilot` is still identical to 202501. The marine `'Y'` proposal command is in review in fork PR #1 (see [speeduino-fork.md](speeduino-fork.md)) |
 | Path in this repo | `third_party/speeduino` (git submodule) |
 | Pinned tag | `202501` (latest upstream release tag at time of pinning, 2026-10-13; the same commit exists on the fork) |
 | Pinned commit | `29bdaa32fc35764094e281f169754714100ce1f0` (2025-01-07) |
@@ -32,7 +32,7 @@ or after cloning: `git submodule update --init --recursive`.
 
 ## Fork status
 
-**Forked** (2026-10-13 ET). The submodule now points at `Nicequantum/speeduino`, still pinned to the upstream `202501` commit `29bdaa3`, so the firmware version hasn't changed. The fork has **no marine changes yet**. The fork's `master` mirrors upstream. Marine work (the AI proposal command, envelope integration, the marine pin map) will land on a `grok-pilot` branch based on `202501`. The rationale, sync procedure and #11 plan are in [speeduino-fork.md](speeduino-fork.md).
+**Forked** (2026-10-13 ET). The submodule now points at `Nicequantum/speeduino`, still pinned to the upstream `202501` commit `29bdaa3`, so the firmware version hasn't changed. The fork's `master` mirrors upstream. Marine work goes on the `grok-pilot` branch, created from `202501`, through in-fork PRs. The first is the AI proposal command (fork PR #1, draft). None has merged yet. The rationale, sync procedure and #11 plan are in [speeduino-fork.md](speeduino-fork.md).
 
 ## Marine notes (open engineering questions — not yet validated)
 

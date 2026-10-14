@@ -17,3 +17,33 @@ jobs:
       - run: pip install -e ".[test]"
       - run: pytest -q
       - run: python -m grok_pilot.stress --samples 3000
+  fork-proposal-tests:
+    # Runs the Nicequantum/speeduino grok_pilot native tests at the pinned submodule
+    # commit (skipped until the pin includes them), and checks the vendored envelope
+    # hasn't drifted from firmware/envelope/envelope.h.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - run: sudo apt-get update && sudo apt-get install -y cmake g++ libgtest-dev
+      - name: native proposal tests
+        run: |
+          if [ -d third_party/speeduino/test/grok_pilot_native ]; then
+            cmake -S third_party/speeduino/test/grok_pilot_native -B build/gp && cmake --build build/gp -j && ctest --test-dir build/gp --output-on-failure
+          else
+            echo "pinned speeduino commit has no grok_pilot tests yet; skipping"
+          fi
+      - name: vendored envelope drift check
+        run: |
+          V=third_party/speeduino/speeduino/grok_pilot/envelope.h
+          S=firmware/envelope/envelope.h
+          if [ -f "$V" ] && [ -f "$S" ]; then
+            want=$(grep -oE '[0-9a-f]{64}' "$V" | head -1)
+            have=$(sha256sum "$S" | cut -d' ' -f1)
+            echo "vendored provenance=$want source=$have"
+            test "$want" = "$have"
+            tail -n +14 "$V" | cmp - "$S"
+          else
+            echo "vendored copy or source not present at this revision; skipping"
+          fi

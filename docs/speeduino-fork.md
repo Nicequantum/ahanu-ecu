@@ -3,13 +3,16 @@
 | | |
 |---|---|
 | Fork | https://github.com/Nicequantum/speeduino (GitHub fork of `speeduino/speeduino`; default branch `master`, the same as upstream) |
-| Submodule | `third_party/speeduino`; `.gitmodules` sets `url = https://github.com/Nicequantum/speeduino.git`, `branch = master` |
+| Submodule | `third_party/speeduino`; `.gitmodules` sets `url = https://github.com/Nicequantum/speeduino.git`, `branch = grok-pilot` |
 | Pinned commit | `29bdaa32fc35764094e281f169754714100ce1f0`, upstream release tag **`202501`** (2025-01-07) |
-| Fork contents vs upstream | **Identical.** The fork's `master` = upstream `master` (`c965de4` at fork time). There are no marine commits yet, and the `grok-pilot` branch hasn't been created |
+| Branches | `master` = an untouched upstream mirror. [`grok-pilot`](https://github.com/Nicequantum/speeduino/tree/grok-pilot) was created from tag `202501` (`29bdaa3`) and has no commits of its own yet. [`feat/proposal-command`](https://github.com/Nicequantum/speeduino/tree/feat/proposal-command) holds the #11 work, in draft fork PR [#1](https://github.com/Nicequantum/speeduino/pull/1) → `grok-pilot` |
+| Pinned commit = `grok-pilot` HEAD | `29bdaa3` (identical to upstream 202501 until fork PR #1 merges) |
 
 **Why the pin didn't move:** the tag-202501 commit exists on the fork, so repointing the URL changed *where* the code comes from but not *which* firmware gets built. The fork's `master` HEAD (`c965de4`, 2026-10-12) is untagged upstream development, and we only build release tags (FORK-NOTES upstream-tracking plan). Verified after the repoint: `pio run -e teensy41` still succeeds, and the image size is identical (FLASH code 232,256 B).
 
-⚠️ `branch = master` in `.gitmodules` only affects `git submodule update --remote`. **Don't use `--remote` for firmware bumps**, because it would jump to untagged upstream master. Always pin an explicit commit (see below). When `grok-pilot` exists, switch `branch` to `grok-pilot`.
+`branch = grok-pilot` in `.gitmodules` only affects `git submodule update --remote`. Pins are still explicit SHAs. **Pin bump rule:** when work lands on `grok-pilot`, bump the ahanu-ecu pin to `grok-pilot` HEAD, but only after `pio run -e teensy41` passes, and record the RAM/flash delta here.
+
+**Workflow choice:** changes reach `grok-pilot` through **PRs from feature branches inside the fork** (e.g. `feat/proposal-command` → `grok-pilot`), not direct commits. That gives a reviewable diff against the 202501 baseline and a place to record build deltas. Fork PR #1 stays a draft until ahanu-ecu PR #12 (the envelope source of truth) is merged, and the vendored copy is re-checked against it.
 
 ## Why fork
 1. **Marine proposal command:** a dedicated serial command for AI map-write proposals, kept separate from TunerStudio's `'M'` write path (#11).
@@ -22,6 +25,14 @@ None of this can live in this repo alone, because every option touches upstream 
 - `master`: an untouched mirror of upstream `master`. We never commit to it.
 - `grok-pilot`: our marine changes, branched from tag `202501`. This is the branch the submodule pins once changes exist.
 - Generic fixes go upstream as PRs from topic branches.
+
+## Merging upstream into grok-pilot (notes)
+- Merge **release tags only**, never `master`: `git merge --no-ff <tag>` on a `sync/<tag>` branch, then PR into `grok-pilot`.
+- Hot spots for conflicts are `speeduino/comms.cpp` (the `'Y'` case and one include) and `.github/workflows/`. Everything else is new files (`speeduino/grok_pilot/`, `grok_pilot_glue.*`, `test/grok_pilot_native/`).
+- After each merge:
+  1. **Re-check that `'Y'` is still unused** in `comms.cpp`, `comms_legacy.cpp` and `reference/speeduino.ini`.
+  2. Re-check page numbers (`pages.h`: VE 2, ign 3, AFR 5), table encodings in `speeduino.ini`, `OFFSET_IGNITION`, and the `setPageValue`/`getPageValue`/`isEepromWritePending` signatures.
+  3. Run the native tests and `pio run -e teensy41`, and compare RAM/flash.
 
 ## Upstream sync procedure
 
@@ -66,4 +77,4 @@ Flow inside the fork (`grok-pilot` branch):
 5. **Log:** reply with decision, reason and value_accepted, and append a `cell_write` record (DATA-SCHEMA v0.2) to SD for every proposal, rejected ones included.
 6. **Burn policy:** AI writes go to **RAM only**. They're never auto-burned to EEPROM in v1. Burning needs an explicit operator command (the existing `'b'`), after reviewing the session's accepted cells. A power cycle reverts unburned AI changes, which is the safe default. TBD: whether a per-session "AI write count" gates the burn.
 
-Open decisions are tracked in #11 (command ID, payload encoding, manual-mode bypass, time base) and #13 (fork tracking).
+**Status:** implemented on `feat/proposal-command` (fork PR #1). The wire protocol is in [PROPOSAL-WIRE-PROTOCOL.md](PROPOSAL-WIRE-PROTOCOL.md): command `'Y'`, a 26-byte request with inner CRC32, a 14-byte response, a RAM ring log instead of SD for now, and `BUSY_EEPROM` while a burn is pending. Remaining work is tracked in #11, #13 and #14.

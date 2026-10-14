@@ -1,0 +1,36 @@
+{
+  "description": "Small, well-evidenced VE increase in an allowed cruise cell.",
+  "expect": {
+    "decisions": [
+      [
+        "accepted",
+        "none"
+      ]
+    ],
+    "gateway_ok": true,
+    "schema_valid": true
+  },
+  "kind": "good",
+  "response": {
+    "anomalies": [],
+    "engine_id": 1,
+    "explanation": "Cruise at about 2,800 rpm is running slightly lean on both banks. Adding 2.5 % fuel to that cell.",
+    "mode": "copilot",
+    "model_version": "grok-example",
+    "proposals": [
+      {
+        "confidence": 0.8,
+        "evidence_samples": 120,
+        "map_idx": 10,
+        "rationale": "both banks ~0.3 AFR lean in this cell",
+        "rpm_idx": 7,
+        "table": "ve",
+        "value_before": 80.0,
+        "value_proposed": 82.0
+      }
+    ],
+    "request_id": "req-ex-1",
+    "schema": "grok-pilot.proposal-response.v1",
+    "stage": "cruise"
+  }
+}

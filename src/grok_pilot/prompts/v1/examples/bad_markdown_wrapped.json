@@ -1,0 +1,8 @@
+{
+  "description": "Model wrapped JSON in prose/markdown; not parseable as a JSON object.",
+  "expect": {
+    "parse_ok": false
+  },
+  "kind": "bad",
+  "raw": "Sure! Here is my proposal:\n```json\n{\"schema\": \"grok-pilot.proposal-response.v1\"}\n```"
+}

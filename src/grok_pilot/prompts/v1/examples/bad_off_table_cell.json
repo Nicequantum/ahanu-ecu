@@ -1,0 +1,29 @@
+{
+  "description": "rpm_idx outside 0-15.",
+  "expect": {
+    "schema_valid": false
+  },
+  "kind": "bad",
+  "response": {
+    "anomalies": [],
+    "engine_id": 1,
+    "explanation": "x",
+    "mode": "copilot",
+    "model_version": "grok-example",
+    "proposals": [
+      {
+        "confidence": 0.8,
+        "evidence_samples": 120,
+        "map_idx": 10,
+        "rationale": "both banks ~0.3 AFR lean in this cell",
+        "rpm_idx": 16,
+        "table": "ve",
+        "value_before": 80.0,
+        "value_proposed": 82.0
+      }
+    ],
+    "request_id": "req-ex-1",
+    "schema": "grok-pilot.proposal-response.v1",
+    "stage": "cruise"
+  }
+}

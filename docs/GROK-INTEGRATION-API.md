@@ -55,6 +55,8 @@ TBD: the transport to the Teensy (Speeduino serial commands vs CAN vs custom) an
 
 ## 4. Prompt template
 
+> Versioned templates (system prompt, context assembly, budgets, examples) now live in `src/grok_pilot/prompts/v1/`. See [PROMPT-TEMPLATES.md](PROMPT-TEMPLATES.md). The inline `grok.PROMPT_TEMPLATE` below is the earlier minimal version and is kept for compatibility.
+
 The prompt lives in `grok.PROMPT_TEMPLATE`. In summary, it covers:
 - The role ("advisory only") and the statement that the envelope may clamp or reject.
 - The stage, the status, and which `rpm_idx` cells are allowed.

@@ -1,0 +1,78 @@
+{
+  "description": "Schema-valid but unsafe: spark over max, AFR target below floor, stale basis, thin evidence.",
+  "expect": {
+    "decisions": [
+      [
+        "rejected",
+        "spark_limit"
+      ],
+      [
+        "rejected",
+        "afr_floor"
+      ],
+      [
+        "rejected",
+        "stale_basis"
+      ],
+      [
+        "rejected",
+        "insufficient_samples"
+      ]
+    ],
+    "gateway_ok": true,
+    "schema_valid": true
+  },
+  "kind": "bad",
+  "response": {
+    "anomalies": [],
+    "engine_id": 1,
+    "explanation": "x",
+    "mode": "copilot",
+    "model_version": "grok-example",
+    "proposals": [
+      {
+        "confidence": 0.8,
+        "evidence_samples": 120,
+        "map_idx": 10,
+        "rationale": "both banks ~0.3 AFR lean in this cell",
+        "rpm_idx": 7,
+        "table": "spark",
+        "value_before": 24.0,
+        "value_proposed": 40.0
+      },
+      {
+        "confidence": 0.8,
+        "evidence_samples": 120,
+        "map_idx": 10,
+        "rationale": "both banks ~0.3 AFR lean in this cell",
+        "rpm_idx": 7,
+        "table": "afr_target",
+        "value_before": 14.7,
+        "value_proposed": 9.0
+      },
+      {
+        "confidence": 0.8,
+        "evidence_samples": 120,
+        "map_idx": 10,
+        "rationale": "both banks ~0.3 AFR lean in this cell",
+        "rpm_idx": 8,
+        "table": "ve",
+        "value_before": 70.0,
+        "value_proposed": 71.0
+      },
+      {
+        "confidence": 0.8,
+        "evidence_samples": 3,
+        "map_idx": 10,
+        "rationale": "both banks ~0.3 AFR lean in this cell",
+        "rpm_idx": 9,
+        "table": "ve",
+        "value_before": 80.0,
+        "value_proposed": 81.0
+      }
+    ],
+    "request_id": "req-ex-1",
+    "schema": "grok-pilot.proposal-response.v1",
+    "stage": "cruise"
+  }
+}

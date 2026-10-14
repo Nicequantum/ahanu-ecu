@@ -1,0 +1,30 @@
+{
+  "description": "Banks disagree beyond threshold, so no proposals and a critical anomaly.",
+  "expect": {
+    "decisions": [],
+    "gateway_ok": true,
+    "schema_valid": true
+  },
+  "kind": "good",
+  "response": {
+    "anomalies": [
+      {
+        "code": "wideband_disagree",
+        "message": "Bank B reads 1.8 AFR leaner than bank A for 20 s",
+        "severity": "critical"
+      }
+    ],
+    "engine_id": 1,
+    "explanation": "The two oxygen sensors disagree by 1.8 AFR, so the data can't be trusted. No changes; check bank B's sensor and exhaust leaks.",
+    "mode": "copilot",
+    "model_version": "grok-example",
+    "proposals": [],
+    "request_id": "req-ex-1",
+    "schema": "grok-pilot.proposal-response.v1",
+    "stage": "cruise",
+    "stage_recommendation": {
+      "action": "hold",
+      "reason": "wideband disagreement"
+    }
+  }
+}

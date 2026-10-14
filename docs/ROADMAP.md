@@ -1,43 +1,45 @@
 # ahanu-ecu Roadmap
 
-## Phase 0: Foundation (current)
+## Phase 0 — Foundation (current)
 
-- [x] Repo created with README and source stub
-- [x] EngineReading type mirror from Nicequantum/Ahanu
-- [x] Open source platform audit committed
-- [x] AI tuning safety architecture documented
-- [ ] Fork Speeduino into this repo
-- [ ] Ardu-Stim bench loop: minimal fuel+spark on simulator
+- [x] Repo created, README, interface contract pointing at Nicequantum/Ahanu types.ts
+- [x] C++ EngineReading type mirror for compile-time checking
+- [x] Open-source platform audit committed
+- [x] AI auto-tune architecture documented
+- [ ] Fork Speeduino into this repo as upstream baseline
 
-## Phase 1: Marine Layer
+## Phase 1 — Bench Loop
 
-- [ ] Teensy 4.1 + Dropbear V2 pin map
-- [ ] NMEA 2000 PGN publisher (Lappalainen library): 127488 RPM, 127489 engine params, 127505 fluid level, 127508 battery
-- [ ] Spartan 3 Lite UART reader (9600 baud, 5V logic, divider) → AFR PGN
-- [ ] SMX oil pressure sender via ADS1115
-- [ ] EGT via MAX31855
-- [ ] Dual-engine support: two Speeduino instances, shared AI brain
+- [ ] Speeduino firmware boots on Ardu-Stim (no hardware needed)
+- [ ] Minimal fuel-and-spark loop verified on simulator
+- [ ] Serial protocol handler: read RPM/AFR/temps, write map cells
+- [ ] NMEA 2000 PGN publisher stub (Lappalainen library)
 
-## Phase 2: Watchdog Teensy
+## Phase 2 — Safety Layer
 
-- [ ] Heartbeat monitor on Speeduino serial
-- [ ] Fuel pump relay kill on timeout
-- [ ] Independent lean cutoff via second Spartan 3
-- [ ] NMEA 2000 passthrough when Speeduino is dead
+- [ ] Deterministic validation envelope (fuel delta, spark delta, AFR floor/ceiling)
+- [ ] Lean-cutoff comparator design (hardware interlock spec)
+- [ ] Watchdog Teensy spec (heartbeat timeout, fuel pump kill)
+- [ ] Audit trail logger
 
-## Phase 3: AI Auto-Tune
+## Phase 3 — Staged Curriculum
 
-- [ ] Deterministic validation envelope (fuel/spark/AFR limits)
-- [ ] Rate limiter and burst protection
-- [ ] Audit trail (append-only, replayable)
-- [ ] Staged curriculum: cold start → warm idle → cruise → load → street
-- [ ] Green/yellow/red phase status → Ahanu dashboard
-- [ ] Dual-wideband divergence detection
-- [ ] Grok reasoning layer: plain-language proposals + logged rationale
+- [ ] Cold-start phase state machine
+- [ ] Warm-idle phase
+- [ ] Cruise / light-load / load-test phases
+- [ ] Green/yellow/red status per phase
+- [ ] Advancement refusal logic
 
-## Phase 4: Ahanu Integration
+## Phase 4 — AI Loop
 
-- [ ] Gateway service: Speeduino serial ↔ Ahanu UDP JSON / TCP 39150
-- [ ] Two-way map writes through Ahanu UI
-- [ ] AI phase status as live gauge binding
-- [ ] Manual override console in Ahanu
+- [ ] AI proposal interface (Grok API or local model)
+- [ ] Proposal-validation-write pipeline
+- [ ] Dual-wideband disagreement handling
+- [ ] Dual-engine shared tuning service
+
+## Phase 5 — Ahanu Integration
+
+- [ ] EngineSourceKind 'standalone' path live
+- [ ] Custom TypeScript tuner client (replaces TunerStudio)
+- [ ] Ahanu as observer + manual override console
+- [ ] Street-tune mode with multi-sensor redundancy

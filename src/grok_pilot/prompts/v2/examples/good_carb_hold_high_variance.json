@@ -1,0 +1,33 @@
+{
+  "description": "WOT AFR is too scattered to trust: no jet change, timing unchanged, warning raised.",
+  "expect": {
+    "decisions": [],
+    "gateway_ok": true,
+    "jet": null,
+    "schema_valid": true
+  },
+  "fixture": {
+    "spread": 2.0,
+    "wot_afr": 12.4
+  },
+  "kind": "good",
+  "response": {
+    "anomalies": [
+      {
+        "code": "afr_variance",
+        "message": "WOT AFR std above limit; jetting deferred",
+        "severity": "warn"
+      }
+    ],
+    "engine_id": 0,
+    "engine_room_mode": "carb",
+    "explanation": "Full-throttle AFR swings too much to pick a jet. Do more steady WOT runs (same trim and load) first.",
+    "jetting": null,
+    "mode": "copilot",
+    "model_version": "grok-example",
+    "proposals": [],
+    "request_id": "req-ex-2",
+    "schema": "grok-pilot.proposal-response.v2",
+    "stage": "carb_jetting"
+  }
+}

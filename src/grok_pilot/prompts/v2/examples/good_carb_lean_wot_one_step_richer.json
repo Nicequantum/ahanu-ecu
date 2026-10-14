@@ -1,0 +1,54 @@
+{
+  "description": "WOT AFR 12.6 is lean of the 11-12 band: one step richer on the secondaries (#1431 .107 -> #1432 .110), plus a small spark change.",
+  "expect": {
+    "decisions": [
+      [
+        "accepted",
+        "none"
+      ]
+    ],
+    "gateway_ok": true,
+    "jet": [
+      "accepted",
+      "none",
+      0.11
+    ],
+    "schema_valid": true
+  },
+  "fixture": {
+    "wot_afr": 12.6
+  },
+  "kind": "good",
+  "response": {
+    "anomalies": [],
+    "engine_id": 0,
+    "engine_room_mode": "carb",
+    "explanation": "At full throttle the engine is running a bit lean (12.6). Fit secondary jets #1432 (.110) in place of #1431 (.107), then declare the swap so the next runs can be compared.",
+    "jetting": {
+      "bank": "secondary",
+      "current_size": 0.107,
+      "proposed_size": 0.11,
+      "rationale": "secondary WOT cells: mean AFR 12.6 (n=200, std 0.07) is above the 11.0-12.0 band; one step richer",
+      "rod": "0.071x0.047",
+      "spring": "orange",
+      "table": "jet"
+    },
+    "mode": "copilot",
+    "model_version": "grok-example",
+    "proposals": [
+      {
+        "confidence": 0.7,
+        "evidence_samples": 120,
+        "map_idx": 10,
+        "rationale": "no knock indications, EGT steady; +1 deg at cruise",
+        "rpm_idx": 7,
+        "table": "spark",
+        "value_before": 24.0,
+        "value_proposed": 25.0
+      }
+    ],
+    "request_id": "req-ex-2",
+    "schema": "grok-pilot.proposal-response.v2",
+    "stage": "carb_jetting"
+  }
+}

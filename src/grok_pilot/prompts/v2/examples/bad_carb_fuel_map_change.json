@@ -1,0 +1,42 @@
+{
+  "description": "Proposes a VE change in carb mode. The carb is the fuel authority, so it's rejected as carb_fuel_locked and the envelope is never consulted.",
+  "expect": {
+    "decisions": [
+      [
+        "rejected",
+        "carb_fuel_locked"
+      ]
+    ],
+    "gateway_ok": true,
+    "jet": null,
+    "schema_valid": true
+  },
+  "fixture": {
+    "wot_afr": 12.6
+  },
+  "kind": "bad",
+  "response": {
+    "anomalies": [],
+    "engine_id": 0,
+    "engine_room_mode": "carb",
+    "explanation": "x",
+    "jetting": null,
+    "mode": "copilot",
+    "model_version": "grok-example",
+    "proposals": [
+      {
+        "confidence": 0.8,
+        "evidence_samples": 120,
+        "map_idx": 10,
+        "rationale": "lean at WOT",
+        "rpm_idx": 7,
+        "table": "ve",
+        "value_before": 80.0,
+        "value_proposed": 83.0
+      }
+    ],
+    "request_id": "req-ex-2",
+    "schema": "grok-pilot.proposal-response.v2",
+    "stage": "carb_jetting"
+  }
+}

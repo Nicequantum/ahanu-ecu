@@ -16,7 +16,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.setuptools.package-data]
-grok_pilot = ["schemas/*.json", "prompts/v1/*.md", "prompts/v1/examples/*.json"]
+grok_pilot = ["schemas/*.json", "prompts/v1/*.md", "prompts/v1/examples/*.json", "prompts/v2/*.md", "prompts/v2/examples/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

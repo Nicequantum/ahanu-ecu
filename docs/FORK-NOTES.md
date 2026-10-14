@@ -1,12 +1,14 @@
 # Speeduino Fork Notes
 
-## Pinned upstream
+## Pinned firmware
 
 | Item | Value |
 |---|---|
+| Submodule URL | https://github.com/Nicequantum/speeduino (fork of upstream, created 2026-10-14 UTC; `.gitmodules` branch = `master`) |
 | Upstream | https://github.com/speeduino/Speeduino |
+| Fork contents vs upstream | **Identical**: no marine changes yet (see [speeduino-fork.md](speeduino-fork.md)) |
 | Path in this repo | `third_party/speeduino` (git submodule) |
-| Pinned tag | `202501` (latest release tag at time of pinning, 2026-10-13) |
+| Pinned tag | `202501` (latest upstream release tag at time of pinning, 2026-10-13; the same commit exists on the fork) |
 | Pinned commit | `29bdaa32fc35764094e281f169754714100ce1f0` (2025-01-07) |
 | Upstream master HEAD seen at pin time | `c965de489bb2153e7f1c6bd2e90103dc2a501a3b` (2026-10-12) — **not** used; untagged |
 | PlatformIO env for our target | `teensy41` (verified in `third_party/speeduino/platformio.ini`; upstream `default_envs` is `megaatmega2560`, so always pass `-e teensy41`) |
@@ -24,13 +26,13 @@ or after cloning: `git submodule update --init --recursive`.
 
 ## Upstream-tracking plan
 
-1. Pin to upstream **release tags** only (e.g. `202501`), never untagged master, for anything flashed to an engine.
+1. Pin to upstream **release tags** only (or our `grok-pilot` commits built on them) (e.g. `202501`), never untagged master, for anything flashed to an engine.
 2. On each new upstream release: bump submodule on a branch, run the Ardu-Stim bench loop (`docs/ARDU-STIM-BENCH.md`), diff `reference/speeduino.ini` for log/field changes affecting `docs/DATA-SCHEMA.md`, then merge.
 3. Record each bump in the table above (tag, SHA, date, bench result).
 
-## Fork to Nicequantum later?
+## Fork status
 
-Not yet. The submodule points directly at upstream. Fork to `Nicequantum/speeduino` **only when** we need firmware changes (e.g. extra log fields such as per-channel PW / AI proposal IDs, Spartan 3 UART input, hardware lean-cut hooks, MAX31855 EGT). At that point: fork, change the submodule URL in `.gitmodules`, keep changes on a `grok-pilot` branch rebased onto upstream tags, and upstream generic fixes as PRs.
+**Forked** (2026-10-13 ET). The submodule now points at `Nicequantum/speeduino`, still pinned to the upstream `202501` commit `29bdaa3`, so the firmware version hasn't changed. The fork has **no marine changes yet**. The fork's `master` mirrors upstream. Marine work (the AI proposal command, envelope integration, the marine pin map) will land on a `grok-pilot` branch based on `202501`. The rationale, sync procedure and #11 plan are in [speeduino-fork.md](speeduino-fork.md).
 
 ## Marine notes (open engineering questions — not yet validated)
 

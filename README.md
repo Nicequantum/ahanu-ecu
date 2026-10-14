@@ -4,7 +4,7 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
 
 ## Current Status (2026-10-13)
 
-- ✅ Speeduino is a submodule at `third_party/speeduino`, pinned to upstream tag `202501` (`29bdaa3`). Clone with `--recurse-submodules`. `pio run -e teensy41` builds; not yet flashed to hardware.
+- ✅ Speeduino is a submodule at `third_party/speeduino` pointing at the **Nicequantum/speeduino fork**, still pinned to upstream release tag `202501` (`29bdaa3`). The fork is identical to upstream for now; there are no marine changes yet. See [speeduino-fork.md](docs/speeduino-fork.md). Clone with `--recurse-submodules`. `pio run -e teensy41` builds; not yet flashed to hardware.
 - ✅ The zero-hardware Ardu-Stim bench procedure is written. The hardware loop is not run yet (no hardware).
 - ✅ **Software-only logic in [`src/grok_pilot`](src/README.md)** (Python, 137 pytest tests, CI in `.github/workflows/python-tests.yml`):
   - deterministic validation envelope, with adversarial and boundary tests
@@ -23,6 +23,7 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
 - [Grok Pilot vision](docs/grok-pilot-vision.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Fork notes (Speeduino, marine notes)](docs/FORK-NOTES.md)
+- [Speeduino fork: rationale, sync procedure, #11 plan](docs/speeduino-fork.md)
 - [Data schema (Teensy logs)](docs/DATA-SCHEMA.md)
 - [Ardu-Stim bench](docs/ARDU-STIM-BENCH.md)
 - [Schema stress test](docs/SCHEMA-STRESS-TEST.md)
@@ -43,7 +44,7 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
 
 ## Architecture
 
-- **ECU core**: upstream Speeduino firmware (git submodule at `third_party/speeduino`, pinned to tag `202501`; not forked — see [FORK-NOTES](docs/FORK-NOTES.md)) running on Teensy 4.1 — fuel and spark control, injector drivers, coil driver via BIP373
+- **ECU core**: Speeduino firmware (git submodule at `third_party/speeduino` → [Nicequantum/speeduino](https://github.com/Nicequantum/speeduino) fork, pinned to upstream tag `202501`; no marine changes yet — see [speeduino-fork.md](docs/speeduino-fork.md)) running on Teensy 4.1 — fuel and spark control, injector drivers, coil driver via BIP373
 - **Sensors**: RPM (HEI tach wire), MAP, coolant temp, intake air temp, TPS, battery voltage, wideband AFR (14Point7 Spartan 3 Lite UART), EGT (MAX31855 + K-type thermocouple), oil pressure (VDO 360-004 sender, 10–180 Ω, plus 87-805605A1 low-oil alarm switch)
 - **Tuning loop (v1: advisory only)**: the AI runs off-Teensy (Mac Studio / iPhone) and only *proposes* cell changes; the Teensy *disposes* via a fixed deterministic validation envelope (max cell delta, spark limits, AFR floor/ceiling, rate limiting) and a hardware lean cutoff independent of software. Every proposal is logged with accept/reject reason. No AI runs on the Teensy.
 - **NMEA 2000**: publishes EngineReading PGNs to the backbone for Ahanu consumption
@@ -66,4 +67,4 @@ This repo must not diverge from those types. If Ahanu's contract changes, update
 ## Toolchain
 
 - PlatformIO + Arduino framework for Teensy 4.1
-- Speeduino upstream: https://github.com/speeduino/speeduino
+- Speeduino fork (submodule): https://github.com/Nicequantum/speeduino · upstream: https://github.com/speeduino/speeduino

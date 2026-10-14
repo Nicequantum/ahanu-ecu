@@ -1,3 +1,4 @@
 [submodule "third_party/speeduino"]
 	path = third_party/speeduino
-	url = https://github.com/speeduino/Speeduino.git
+	url = https://github.com/Nicequantum/speeduino.git
+	branch = master

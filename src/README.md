@@ -25,7 +25,7 @@ python -m grok_pilot.stress                            # coverage report
 ```
 
 ## Planned (firmware side, not started)
-- `third_party/speeduino` holds upstream Speeduino as a submodule (already present)
-- `custom/` will hold marine-specific firmware changes, once we fork
+- `third_party/speeduino` is the Speeduino submodule. It points at the Nicequantum/speeduino fork, pinned to upstream tag 202501, with no marine changes yet
+- Marine firmware changes will go on the fork's `grok-pilot` branch (see docs/speeduino-fork.md)
 - `gateway/` will be the serial-to-Ahanu bridge
 - `contracts/` will hold copies of Ahanu's EngineReading types

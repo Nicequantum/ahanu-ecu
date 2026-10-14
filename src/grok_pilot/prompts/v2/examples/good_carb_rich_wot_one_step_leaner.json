@@ -1,0 +1,38 @@
+{
+  "description": "WOT AFR 10.9 is richer than the band: one step leaner (#1431 .107 -> #1430 .104).",
+  "expect": {
+    "decisions": [],
+    "gateway_ok": true,
+    "jet": [
+      "accepted",
+      "none",
+      0.104
+    ],
+    "schema_valid": true
+  },
+  "fixture": {
+    "wot_afr": 10.9
+  },
+  "kind": "good",
+  "response": {
+    "anomalies": [],
+    "engine_id": 0,
+    "engine_room_mode": "carb",
+    "explanation": "At full throttle it's richer than needed (10.9). Fit secondary jets #1430 (.104), a one-step change that stays on the rich side for safety, then declare the swap.",
+    "jetting": {
+      "bank": "secondary",
+      "current_size": 0.107,
+      "proposed_size": 0.104,
+      "rationale": "secondary WOT cells: mean AFR 10.9 (n=200) is below the 11.0-12.0 band; one step leaner, still rich-biased",
+      "rod": "0.071x0.047",
+      "spring": "orange",
+      "table": "jet"
+    },
+    "mode": "copilot",
+    "model_version": "grok-example",
+    "proposals": [],
+    "request_id": "req-ex-2",
+    "schema": "grok-pilot.proposal-response.v2",
+    "stage": "carb_jetting"
+  }
+}

@@ -85,3 +85,24 @@ ctx = assemble_context(request_id="req-1", engine_id=1, stage="cruise", status="
                        now_us=now_us, window_s=60)
 bundle = render(ctx, budget_tokens=6000)   # bundle.system, bundle.user, bundle.tokens_total, bundle.truncated
 ```
+
+## v2 (carb jetting, branch feature/carb-jetting-mode)
+
+The v2 templates are in `src/grok_pilot/prompts/v2/` (system.md, user.md and 8 examples), with code in `prompts/carb_prompts.py` (`carb_block`, `render_v2`). The response schema is `grok-pilot.proposal-response.v2`.
+
+What v2 adds over v1:
+- `engine_room_mode`
+- `allowed_tables` (`["spark"]` in carb mode)
+- a mandatory, never-truncated **CARB / JETTING** section: installed jets, rod, spring, the jet ladder, the target band, per-bank load-AFR analysis with the deterministic recommendation, an open-experiment flag, and recent `jet_change` experiments
+
+**v1 is unchanged.** `render()` with default arguments produces byte-identical output, which was checked against the main-branch hash.
+
+Measured on synthetic seed 5, engine 0, with a 120 s window:
+
+| Mode | Budget | Est | o200k | Truncation |
+|---|---|---|---|---|
+| carb | none | 15,779 | 14,016 | – |
+| carb | 6,000 | 5,991 | 4,400 | 230 history rows dropped |
+| efi | 6,000 | 5,981 | 4,650 | 212 history rows dropped |
+
+The v2 system prompt is about 1,139 estimated tokens, and the carb block about 788. See [CARB_JETTING_MODE.md](CARB_JETTING_MODE.md).

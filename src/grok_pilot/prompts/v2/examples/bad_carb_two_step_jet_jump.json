@@ -1,0 +1,38 @@
+{
+  "description": "Two ladder steps at once (.107 -> .113): clamped to one step (.110), jet_step_exceeded.",
+  "expect": {
+    "decisions": [],
+    "gateway_ok": true,
+    "jet": [
+      "clamped",
+      "jet_step_exceeded",
+      0.11
+    ],
+    "schema_valid": true
+  },
+  "fixture": {
+    "wot_afr": 12.9
+  },
+  "kind": "bad",
+  "response": {
+    "anomalies": [],
+    "engine_id": 0,
+    "engine_room_mode": "carb",
+    "explanation": "x",
+    "jetting": {
+      "bank": "secondary",
+      "current_size": 0.107,
+      "proposed_size": 0.113,
+      "rationale": "WOT 12.9, go two sizes to get there faster",
+      "rod": "0.071x0.047",
+      "spring": "orange",
+      "table": "jet"
+    },
+    "mode": "copilot",
+    "model_version": "grok-example",
+    "proposals": [],
+    "request_id": "req-ex-2",
+    "schema": "grok-pilot.proposal-response.v2",
+    "stage": "carb_jetting"
+  }
+}

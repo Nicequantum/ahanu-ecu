@@ -69,12 +69,12 @@ def _dump(obj) -> str:
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
 
 
-def _read(name: str) -> str:
-    return resources.files("grok_pilot.prompts").joinpath(f"{PROMPT_VERSION}/{name}").read_text(encoding="utf-8")
+def _read(name: str, version: str = PROMPT_VERSION) -> str:
+    return resources.files("grok_pilot.prompts").joinpath(f"{version}/{name}").read_text(encoding="utf-8")
 
 
-def system_prompt() -> str:
-    return _read("system.md")
+def system_prompt(version: str = PROMPT_VERSION) -> str:
+    return _read("system.md", version)
 
 
 def _downsample(samples: list, every_s: float) -> list:
@@ -155,11 +155,12 @@ class PromptBundle:
         return self.tokens_system + self.tokens_user
 
 
-def _fill(ctx: Context, history: dict, audit: list, tables: dict) -> str:
+def _fill(ctx: Context, history: dict, audit: list, tables: dict, version: str = PROMPT_VERSION,
+          extra: Optional[dict] = None) -> str:
     n_rows = sum(len(h["rows"]) for h in history.values())
     note = (f"both engines, newest {n_rows} rows, ~{ctx.history_every_s:g} s spacing, t_s relative to now; "
             "compact columns/rows")
-    return _read("user.md").format(
+    return _read("user.md", version).format(**(extra or {}),
         request_id=ctx.request_id, engine_id=ctx.engine_id,
         engine_label=("port" if ctx.engine_id == 0 else "starboard") + ", assigned at first run",
         stage=ctx.stage, status=ctx.status, allowed_rpm_idx=_dump(ctx.allowed_rpm_idx),
@@ -168,14 +169,17 @@ def _fill(ctx: Context, history: dict, audit: list, tables: dict) -> str:
         audit_json=_dump(audit), history_note=note, history_json=_dump(history))
 
 
-def render(ctx: Context, budget_tokens: int = 6000) -> PromptBundle:
+def render(ctx: Context, budget_tokens: int = 6000, *, version: str = PROMPT_VERSION,
+           extra: Optional[dict] = None) -> PromptBundle:
     """Render system + user prompt within ``budget_tokens`` (prompt only; reserve output separately).
 
     Truncation order when over budget: history (oldest rows first, alternating
     engines), then audit trail (oldest first), then table cells (outside the
     allowed rpm band first). REQUEST, ENVELOPE and ENGINE STATE are never cut.
+    ``version``/``extra`` are for later template versions (v2 adds placeholders);
+    the defaults give exactly the v1 output.
     """
-    sysp = system_prompt()
+    sysp = system_prompt(version)
     ts = estimate_tokens(sysp)
     hist = {e: {"cols": h["cols"], "rows": list(h["rows"])} for e, h in ctx.history.items()}
     audit = list(ctx.audit)
@@ -183,7 +187,7 @@ def render(ctx: Context, budget_tokens: int = 6000) -> PromptBundle:
     dropped = {"history_rows": 0, "audit": 0, "table_cells": 0}
 
     def size():
-        return ts + estimate_tokens(_fill(ctx, hist, audit, tables))
+        return ts + estimate_tokens(_fill(ctx, hist, audit, tables, version, extra))
 
     while size() > budget_tokens:
         longest = max(hist.values(), key=lambda h: len(h["rows"]), default=None)
@@ -207,15 +211,15 @@ def render(ctx: Context, budget_tokens: int = 6000) -> PromptBundle:
             dropped["table_cells"] += 1
             continue
         raise BudgetError(f"mandatory sections need {size()} tokens > budget {budget_tokens}")
-    user = _fill(ctx, hist, audit, tables)
-    return PromptBundle(PROMPT_VERSION, sysp, user, ts, estimate_tokens(user), budget_tokens,
+    user = _fill(ctx, hist, audit, tables, version, extra)
+    return PromptBundle(version, sysp, user, ts, estimate_tokens(user), budget_tokens,
                         {k: v for k, v in dropped.items() if v})
 
 
-def load_examples() -> dict:
-    """{name: {"kind": "good"|"bad", "expect": ..., "response": {...}}} from v1/examples/."""
+def load_examples(version: str = PROMPT_VERSION) -> dict:
+    """{name: {"kind": "good"|"bad", "expect": ..., "response": {...}}} from <version>/examples/."""
     out = {}
-    d = resources.files("grok_pilot.prompts").joinpath(f"{PROMPT_VERSION}/examples")
+    d = resources.files("grok_pilot.prompts").joinpath(f"{version}/examples")
     for f in sorted(d.iterdir(), key=lambda p: p.name):
         if f.name.endswith(".json"):
             out[f.name[:-5]] = json.loads(f.read_text(encoding="utf-8"))

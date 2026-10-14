@@ -136,3 +136,93 @@ def test_example_behaves_as_documented(name):
             assert any(d != "accepted" for d, _ in got)  # bad => envelope intervened
         else:
             assert all(d == "accepted" for d, _ in got)
+
+
+# ---------------------------------------------------------------------------------------------
+# v2: engine-room mode + carb jetting (src/grok_pilot/prompts/v2). v1 tests above are untouched.
+from carb_helpers import load_samples  # noqa: E402
+from grok_pilot.carb import EngineRoomMode, analyze_afr  # noqa: E402
+from grok_pilot.gateway_v2 import evaluate_response_v2, load_schema_v2  # noqa: E402
+from grok_pilot.prompts.carb_prompts import carb_block, load_examples_v2, render_v2  # noqa: E402
+
+SCHEMA_V2 = load_schema_v2()
+EXAMPLES_V2 = load_examples_v2()
+JETS = {"primary": 0.113, "secondary": 0.107}
+
+
+def _carb(wot_afr=12.6, spread=0.1, **kw):
+    an = {"secondary": analyze_afr(load_samples(afr=wot_afr, spread=spread), "secondary"),
+          "primary": analyze_afr(load_samples(afr=11.5, bank="primary"), "primary")}
+    return carb_block(current_jets=JETS, rod="0.071x0.047", spring="orange", analyses=an, **kw), an
+
+
+def test_v2_carb_render_sections_and_determinism(recs):
+    c, _ = _carb()
+    a = render_v2(ctx_from(recs, engine_id=0), EngineRoomMode.CARB, c)
+    b = render_v2(ctx_from(list(reversed(recs)), engine_id=0), EngineRoomMode.CARB, _carb()[0])
+    assert a.user == b.user and a.version == "v2"
+    for sec in ("engine_room_mode: carb", 'allowed_tables: ["spark"]', "## CARB / JETTING", "jet_ladder",
+                "deterministic_recommendation", "grok-pilot.proposal-response.v2", "## RECENT AUDIT TRAIL"):
+        assert sec in a.user, sec
+    for phrase in ("Timing only", "AT MOST ONE STEP", "carb_fuel_locked", "Never use idle", "detonation margin",
+                   "physical job"):
+        assert phrase in a.system, phrase
+    block = json.loads(a.user.split("## CARB / JETTING (null in efi mode)\n")[1].split("\n")[0])
+    assert block["target_afr_band"] == [11.0, 12.0]
+    assert block["banks"]["secondary"]["deterministic_recommendation"]["proposed_size"] == 0.110
+    assert [j["part_number"] for j in block["jet_ladder"]] == [1427, 1429, 1430, 1431, 1432, 1433, 1434]
+
+
+def test_v2_efi_mode_has_null_carb_and_all_tables(recs):
+    p = render_v2(ctx_from(recs), EngineRoomMode.EFI, None)
+    assert "## CARB / JETTING (null in efi mode)\nnull\n" in p.user and '"afr_target"' in p.user
+    with pytest.raises(ValueError):
+        render_v2(ctx_from(recs), EngineRoomMode.CARB, None)
+
+
+def test_v2_budget_keeps_carb_block(recs):
+    c, _ = _carb()
+    full = render_v2(ctx_from(recs, engine_id=0), EngineRoomMode.CARB, c, budget_tokens=100000)
+    small = render_v2(ctx_from(recs, engine_id=0), EngineRoomMode.CARB, c, budget_tokens=full.tokens_total - 800)
+    assert small.tokens_total <= small.budget and small.truncated.get("history_rows")
+    assert "deterministic_recommendation" in small.user
+
+
+def test_v1_output_unchanged_by_v2_refactor(recs):
+    # render() with default args must still be the v1 template
+    p = render(ctx_from(recs))
+    assert p.version == "v1" and "proposal-response.v1" in p.user and "CARB" not in p.user
+
+
+def test_v2_examples_inventory():
+    kinds = [v["kind"] for v in EXAMPLES_V2.values()]
+    assert kinds.count("good") >= 2 and kinds.count("bad") >= 2
+    assert {"good_carb_lean_wot_one_step_richer", "good_carb_rich_wot_one_step_leaner", "bad_carb_fuel_map_change",
+            "bad_carb_two_step_jet_jump"} <= set(EXAMPLES_V2)
+
+
+@pytest.mark.parametrize("name", sorted(EXAMPLES_V2))
+def test_v2_example_behaves_as_documented(name):
+    ex = EXAMPLES_V2[name]
+    exp, resp, fx = ex["expect"], ex["response"], ex["fixture"]
+    try:
+        jsonschema.validate(resp, SCHEMA_V2)
+        valid = True
+    except jsonschema.ValidationError:
+        valid = False
+    assert valid is exp["schema_valid"], name
+    if not valid:
+        assert ex["kind"] == "bad"
+        return
+    _, an = _carb(fx["wot_afr"], fx.get("spread", 0.1))
+    e = _env()
+    out = evaluate_response_v2(resp, Envelope(EnvelopeConfig(engine_id=0), tables=e.tables), 5000.0, "req-ex-2",
+                               context_ts_s=4999.5, mode=EngineRoomMode.CARB,
+                               cell_allowed=lambda t, r, m: 5 <= r <= 9, jet_current=JETS,
+                               jet_analysis=an[resp["jetting"]["bank"]] if resp.get("jetting") else None)
+    got = [[r.decision.value, r.reason.value] for _, r in out.cells]
+    assert got == exp["decisions"], name
+    jet = None if out.jet is None else [out.jet.decision.value, out.jet.reason.value, out.jet.jet_accepted]
+    assert jet == exp["jet"], name
+    intervened = any(d != "accepted" for d, _ in got) or (jet is not None and jet[0] != "accepted")
+    assert intervened is (ex["kind"] == "bad"), name

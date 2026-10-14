@@ -30,6 +30,7 @@ class Stage(str, Enum):
     LOAD_TEST = "load_test"
     STREET = "street"      # future; only reachable if enable_street
     ABORTED = "aborted"
+    CARB_JETTING = "carb_jetting"  # carb mode only; a branch off load_test, never in ORDER (carb_curriculum.py)
 
 
 ORDER = [Stage.COLD_START, Stage.WARM_IDLE, Stage.CRUISE, Stage.LOAD_TEST, Stage.STREET]

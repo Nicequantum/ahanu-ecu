@@ -1,0 +1,38 @@
+{
+  "description": "#1428 (.100) exists but isn't on the .003 staging ladder: rejected as off_ladder.",
+  "expect": {
+    "decisions": [],
+    "gateway_ok": true,
+    "jet": [
+      "rejected",
+      "off_ladder",
+      0.107
+    ],
+    "schema_valid": true
+  },
+  "fixture": {
+    "wot_afr": 10.9
+  },
+  "kind": "bad",
+  "response": {
+    "anomalies": [],
+    "engine_id": 0,
+    "engine_room_mode": "carb",
+    "explanation": "x",
+    "jetting": {
+      "bank": "secondary",
+      "current_size": 0.107,
+      "proposed_size": 0.1,
+      "rationale": "rich at WOT",
+      "rod": "0.071x0.047",
+      "spring": "orange",
+      "table": "jet"
+    },
+    "mode": "copilot",
+    "model_version": "grok-example",
+    "proposals": [],
+    "request_id": "req-ex-2",
+    "schema": "grok-pilot.proposal-response.v2",
+    "stage": "carb_jetting"
+  }
+}

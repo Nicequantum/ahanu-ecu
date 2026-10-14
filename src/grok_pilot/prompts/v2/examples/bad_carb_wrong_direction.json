@@ -1,0 +1,38 @@
+{
+  "description": "WOT is lean but proposes a leaner jet: rejected as wrong_direction.",
+  "expect": {
+    "decisions": [],
+    "gateway_ok": true,
+    "jet": [
+      "rejected",
+      "wrong_direction",
+      0.107
+    ],
+    "schema_valid": true
+  },
+  "fixture": {
+    "wot_afr": 12.6
+  },
+  "kind": "bad",
+  "response": {
+    "anomalies": [],
+    "engine_id": 0,
+    "engine_room_mode": "carb",
+    "explanation": "x",
+    "jetting": {
+      "bank": "secondary",
+      "current_size": 0.107,
+      "proposed_size": 0.104,
+      "rationale": "lean it out for power",
+      "rod": "0.071x0.047",
+      "spring": "orange",
+      "table": "jet"
+    },
+    "mode": "copilot",
+    "model_version": "grok-example",
+    "proposals": [],
+    "request_id": "req-ex-2",
+    "schema": "grok-pilot.proposal-response.v2",
+    "stage": "carb_jetting"
+  }
+}

@@ -1,49 +1,44 @@
 # Open Source EFI Platform Audit
 
-Purpose: understand what every major open-source tuning platform runs, why, and where the gaps are — so ahanu-ecu can differentiate with AI auto-tune rather than cloning existing workflows.
+Landscape survey for ahanu-ecu. Goal: understand what every platform runs, why, and where the gaps are that an AI-native tuner can exploit.
 
-## Speeduino (github.com/speeduino/speeduino)
+## Platforms Surveyed
 
-- ~1,800 stars, GPL v2
-- Firmware: C++ on Arduino/Teensy. Fuel map is a 16x16 VE table. Batch or sequential injection. Single-table spark. No AI, no staged curriculum, no dual-engine concept.
-- TunerStudio (EFI Analytics, proprietary) is the only tuning client. No open web-native control surface.
-- Related: Ardu-Stim (engine simulator), Hardware repo (board designs), Tunes repo (base maps), SpeedyLoader (flash tool), SpeedyKnock (knock sensing), SpeedyLogger.
-- Gap: no autonomous progression, no safety envelope, no AI loop, no NMEA 2000 publisher.
+### Speeduino (github.com/speeduino/speeduino)
+- ~1,800 stars, GPL v2, Teensy 4.1 target (Dropbear V2 board)
+- Fuel + spark, batch or sequential, TunerStudio client (proprietary, EFI Analytics)
+- Ardu-Stim engine simulator, Tunes repo, SpeedyKnock, SpeedyLoader
+- **Gap**: no autonomous progression, no AI layer, TunerStudio is the only map editor
 
-## rusEFI (github.com/rusefi/rusefi)
+### rusEFI (github.com/rusefi/rusefi)
+- ~1,200 stars, more powerful: sequential injection, drive-by-wire, Lua scripting, built-in wideband control
+- **Gap**: still routes through TunerStudio or rusEFI console; no staged curriculum
 
-- ~1,200 stars. More powerful: sequential injection, drive-by-wire, Lua scripting, built-in wideband control, CAN.
-- TunerStudio still the client. Lua gives some extensibility but no AI.
-- Gap: same as Speeduino on the tuning-client and safety side.
+### FOME (rusEFI fork)
+- Focused on OEM-quality stability
+- **Gap**: same client dependency
 
-## FOME (rusEFI fork)
+### MegaSquirt (msextra.com)
+- Proprietary firmware, free TunerStudio client
+- Autotune with cell-trust counters and lean-spike cutoffs — closest existing analog to staged learning
+- **Gap**: no AI, no hardware interlock philosophy, no dual-wideband cross-check as standard
 
-- Newer, focused on OEM-quality stability and emissions-style robustness.
-- Gap: same tuning-client limitation.
+### Holley Sniper / Dominator
+- Closed source. Sniper wizard does staged cold-start/idle/cruise. Dominator has dual widebands.
+- **Gap**: proprietary, no extensibility, no AI
 
-## MegaSquirt (msextra.com)
+### FuelTech FT600
+- Race ECU, dual wideband, touchscreen, CAN. Closed.
+- **Gap**: expensive, no open AI layer
 
-- Proprietary firmware, free TunerStudio client. Autotune exists with cell-trust counters and lean-spike cutoffs — closest existing analog to staged learning, but human-driven.
-- Gap: no AI, no curriculum, no dual-wideband cross-check.
+## What Nobody Has Built
 
-## Hypertuner-cloud
+1. An open-source ECU whose tuning client is not TunerStudio
+2. An AI that proposes corrections through deterministic interlocks
+3. A staged curriculum with green/yellow/red progression that refuses to advance without data
+4. Dual-wideband disagreement handling as a first-class safety feature
+5. Audit-trail replay for every map write
 
-- TypeScript project for sharing tunes and logs across Speeduino/rusEFI/FOME.
-- Sharing tool, not a control surface. No live control, no AI.
+## Edge Strategy
 
-## Marine-specific
-
-- Timo Lappalainen NMEA2000 library (Teensy driver) — de facto standard, used by Ahanu DigitalAdapter.
-- ESP32 NMEA2000 multiprotocol gateway (Signal K, NMEA 0183, Actisense) with web dashboard.
-- SenseESP-based engine monitor publishing PGNs 127488/127489/127505/127508.
-- No open-source marine EFI with NMEA 2000 integration and AI tuning.
-
-## The Gap (ahanu-ecu's opportunity)
-
-1. AI as the tuner, not a cell-nudger — reasons about engine state in plain language, proposes corrections.
-2. Deterministic safety envelope that the AI cannot override.
-3. Staged curriculum with autonomous advancement and refusal.
-4. Dual-wideband redundancy with disagreement freeze.
-5. Dual-engine independent learning with shared strategy.
-6. NMEA 2000 native — Ahanu as the dashboard, not TunerStudio.
-7. Open web-native tuning client (TypeScript) instead of proprietary desktop app.
+Build on Speeduino (Teensy 4.1, mature, Ardu-Stim available) and replace the client layer entirely with Ahanu. The AI safety architecture in AI_TUNING_SAFETY.md is the differentiator.

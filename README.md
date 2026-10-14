@@ -24,6 +24,7 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
   - Results: 28 GoogleTest tests pass; the cross-check against Python-generated vectors gives 6,543 steps with **0 mismatches**; the Teensy 4.1 PlatformIO build compiles.
   - Not yet wired into Speeduino's map-write path. That needs a fork (#11). See [ENVELOPE-CPP-PORT](docs/ENVELOPE-CPP-PORT.md).
 - ⚠️ **Wideband UART divider corrected** to 10k top / 20k bottom (≈ 3.33 V). The old 10k/2k gave ≈ 0.83 V. This is a pending hardware change; see [WIRING-NOTES](docs/WIRING-NOTES.md) and #4.
+- 🔧 **Carb jetting mode** (branch `feature/carb-jetting-mode`, draft PR, not merged). In carb mode Speeduino does spark only and AI tuning is limited to timing. Jet changes are advice only: one ladder step at a time, based on WOT/on-plane AFR with an 11.0–12.0 target band. A person swaps the jet, and the system logs it as a `jet_change` experiment. Adds schema v0.3, response schema v2 and prompts v2. See [CARB_JETTING_MODE](docs/CARB_JETTING_MODE.md).
 - 📱 iOS prototype on branch `prototype/ios-dash`, draft PR [#18](https://github.com/Nicequantum/ahanu-ecu/pull/18) (do not merge), tracking issue [#17](https://github.com/Nicequantum/ahanu-ecu/issues/17), docs/IOS-PROTOTYPE.md on that branch. Swift core (sim, curriculum, proposal decoding, envelope preview, view-model): 24 tests pass on Linux Swift 6.0.3 and CI. SwiftUI views uncompiled pending Xcode.
 - ⏳ No custom firmware yet. The envelope must still be ported to the Teensy (#7). AI is advisory only in v1.
 - Run the tests: `pip install -e ".[test]" && pytest -q`
@@ -47,6 +48,7 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
 - [Wiring notes (wideband divider)](docs/WIRING-NOTES.md)
 - [Prompt templates v1](docs/PROMPT-TEMPLATES.md)
 - [Ingest pipeline](docs/INGEST-PIPELINE.md)
+- [Carb jetting mode](docs/CARB_JETTING_MODE.md)
 
 ### Issues
 - [#1 Speeduino submodule + Ardu-Stim bench loop](https://github.com/Nicequantum/ahanu-ecu/issues/1)

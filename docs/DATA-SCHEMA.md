@@ -1,4 +1,4 @@
-# Teensy Log Schema (v0.2 draft)
+# Teensy Log Schema (v0.3 draft; v0.3 = v0.2 + carb jetting, additive)
 
 This is the foundation the Mac Studio model trains on. If we log the wrong fields, the model learns garbage. Version this file and bump `schema_version` on every change.
 
@@ -104,3 +104,44 @@ The synthetic stress test justifies these. See [SCHEMA-STRESS-TEST.md](SCHEMA-ST
 - Header `seq` is required everywhere and must be strictly increasing per (engine_id, boot_id).
 
 All v0.2 rates and resolutions are still TARGETS (see the top of this document).
+
+## v0.3 changes (2026-10-14): carb jetting mode
+
+This version is additive. Every valid v0.2 record is also valid v0.3 once you change its `schema_version`. The v0.2 rules are frozen in `SCHEMAS["0.2"]`, and the synthetic generator still emits v0.2. The background is in [CARB_JETTING_MODE.md](CARB_JETTING_MODE.md).
+
+Why bump the version: a v0.2 validator rejects the new record type and the new enum values, so v0.3 data needs its own version label.
+
+- **Stages:** adds `carb_jetting`.
+- **`cell_write.reject_reason`:** adds `carb_fuel_locked`, `jet_step_exceeded`, `off_ladder`, `wrong_direction`, `afr_variance`, `experiment_open`.
+- **Events:** adds `engine_room_mode` (carries the optional field `engine_room_mode`: `efi` | `carb`) and `jet_swap_declared`.
+- **New record type `jet_change`:** the jetting experiment, logged in the audit trail the same way as `cell_write`. It's append-only, and each experiment produces two records that share a `proposal_id`:
+  1. `phase=proposed`: the advice and the deterministic decision, plus the AFR window it was based on.
+  2. `phase=evaluated`: written after the human declares they've made the physical swap. It adds the new AFR window and the outcome.
+
+| Field | Type | Notes |
+|---|---|---|
+| header | — | `record_type=jet_change`, `stage` (normally `carb_jetting`) |
+| proposal_id, request_id, source, model_version | — | Same meaning as in `cell_write` |
+| phase | enum | `proposed` \| `evaluated` |
+| engine_room_mode | enum | Always `carb` |
+| bank | enum | `primary` \| `secondary` (carb metering circuit, **not** the exhaust bank) |
+| jet_before / jet_proposed / jet_accepted | float in | Jet orifice size in inches, e.g. 0.113. `jet_accepted` is after the clamp, and equals `jet_before` if the proposal was rejected |
+| rod, spring | str / enum | Metering rod, e.g. `0.071x0.047`. Step-up spring is one of `blue`, `yellow`, `orange`, `pink`, `silver`. Both are context only and never changed by the system |
+| decision, reject_reason | enum | Same values as `cell_write` (v0.3 reasons) |
+| rationale | str | Why the change was suggested, e.g. "WOT mean 12.6 vs band 11–12" |
+| afr_target_lo / afr_target_hi | float | Target band in effect (default WOT band 11.0–12.0) |
+| before_start_us, before_end_us, afr_before_mean/std/n | — | The AFR window before the swap (the evidence) |
+| swap_declared_us | int | When the operator declared the swap done (`phase=evaluated` only) |
+| after_start_us, after_end_us, afr_after_mean/std/n | — | The AFR window after the swap (`phase=evaluated` only) |
+| afr_delta | float | after_mean − before_mean |
+| moved_toward_target | bool | True if the after-swap mean is closer to the band than the before-swap mean (or inside it) |
+
+Cross-field rules, enforced in `schema.py`:
+- A rejected record must have a reason, and `jet_accepted` must equal `jet_before`.
+- An accepted record must have reason `none`.
+- A `proposed` record carries none of the after-swap fields.
+- An `evaluated` record must carry all of them, and the timestamps must be in order: before window, then the swap, then the after window.
+- `afr_delta` must be consistent with the two means.
+- A rejected proposal can't be evaluated.
+
+Carb engines still log `sample` records as usual. `inj_pw_us` is all zeros because Speeduino drives spark only in carb mode.

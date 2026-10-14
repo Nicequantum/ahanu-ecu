@@ -22,6 +22,16 @@ REASONS_V02 = REASONS_V01 + ["spark_limit", "ve_limit", "invalid_value", "off_ta
                              "stale_timestamp", "stale_basis", "learning_frozen"]
 EVENTS_V01 = ["stage_transition", "lean_cut", "fault", "boot", "interlock", "watchdog_trip"]
 EVENTS_V02 = EVENTS_V01 + ["status_change", "learning_frozen", "operator_reset"]
+# v0.3 (carb jetting mode, docs/CARB_JETTING_MODE.md). Additive only: every valid v0.2 record
+# is valid v0.3 once its schema_version is changed.
+STAGES_V03 = STAGES_V02 + ["carb_jetting"]
+REASONS_V03 = REASONS_V02 + ["carb_fuel_locked", "jet_step_exceeded", "off_ladder", "wrong_direction",
+                             "afr_variance", "experiment_open"]
+EVENTS_V03 = EVENTS_V02 + ["engine_room_mode", "jet_swap_declared"]
+JET_BANKS = ["primary", "secondary"]
+SPRING_COLORS = ["blue", "yellow", "orange", "pink", "silver"]
+ENGINE_ROOM_MODES = ["efi", "carb"]
+JET_PHASES = ["proposed", "evaluated"]
 
 
 @dataclass(frozen=True)
@@ -98,7 +108,43 @@ def _v02():
     return s
 
 
-SCHEMAS = {"0.1": _v01(), "0.2": _v02()}
+def _v03():
+    s = _v02()
+    h = _header(STAGES_V03)
+    h["record_type"] = F("enum", enum=["sample", "cell_write", "event", "jet_change"])
+    for rt in s:
+        s[rt].update(h)
+    s["cell_write"]["reject_reason"] = F("enum", enum=REASONS_V03)
+    s["event"]["event"] = F("enum", enum=EVENTS_V03)
+    s["event"]["from_stage"] = F("enum", enum=STAGES_V03, required=False)
+    s["event"]["to_stage"] = F("enum", enum=STAGES_V03, required=False)
+    s["event"]["engine_room_mode"] = F("enum", enum=ENGINE_ROOM_MODES, required=False)
+    afr = lambda req=True: F("float", 0, 655.35, required=req)
+    s["jet_change"] = {**h,
+        # identity / audit (same pattern as cell_write)
+        "proposal_id": F("int", 0, 2**32 - 1), "request_id": F("str"), "source": F("enum", enum=SOURCES),
+        "model_version": F("str"), "phase": F("enum", enum=JET_PHASES),
+        "engine_room_mode": F("enum", enum=["carb"]),
+        "bank": F("enum", enum=JET_BANKS),
+        "jet_before": F("float", 0.05, 0.2), "jet_proposed": F("float", 0.05, 0.2), "jet_accepted": F("float", 0.05, 0.2),
+        "rod": F("str", required=False), "spring": F("enum", enum=SPRING_COLORS, required=False),
+        "decision": F("enum", enum=DECISIONS), "reject_reason": F("enum", enum=REASONS_V03),
+        "rationale": F("str", required=False),
+        "afr_target_lo": afr(), "afr_target_hi": afr(),
+        # prior AFR window (the evidence the recommendation is based on)
+        "before_start_us": F("int", 0, 2**64 - 1), "before_end_us": F("int", 0, 2**64 - 1),
+        "afr_before_mean": afr(), "afr_before_std": F("float", 0, 100), "afr_before_n": F("int", 0, 2**32 - 1),
+        # human-declared physical swap + new AFR window (phase=evaluated only)
+        "swap_declared_us": F("int", 0, 2**64 - 1, required=False),
+        "after_start_us": F("int", 0, 2**64 - 1, required=False), "after_end_us": F("int", 0, 2**64 - 1, required=False),
+        "afr_after_mean": afr(False), "afr_after_std": F("float", 0, 100, required=False),
+        "afr_after_n": F("int", 0, 2**32 - 1, required=False),
+        "afr_delta": F("float", -100, 100, required=False), "moved_toward_target": F("bool", required=False),
+    }
+    return s
+
+
+SCHEMAS = {"0.1": _v01(), "0.2": _v02(), "0.3": _v03()}
 CURRENT = "0.2"
 
 
@@ -157,7 +203,42 @@ def validate_record(rec: dict, version: Optional[str] = None) -> list[str]:
             errs.append("reject_reason: accepted record must have reason none")
         if rec["decision"] == "rejected" and rec["value_accepted"] != rec["value_before"]:
             errs.append("value_accepted: must equal value_before when rejected")
+    if rec.get("record_type") == "jet_change" and not errs:
+        errs += _jet_change_rules(rec)
     return errs
+
+
+_AFTER = ("swap_declared_us", "after_start_us", "after_end_us", "afr_after_mean", "afr_after_n", "afr_delta",
+          "moved_toward_target")
+
+
+def _jet_change_rules(r: dict) -> list:
+    e = []
+    if r["decision"] == "rejected" and r["reject_reason"] == "none":
+        e.append("reject_reason: rejected record needs a reason")
+    if r["decision"] == "accepted" and r["reject_reason"] != "none":
+        e.append("reject_reason: accepted record must have reason none")
+    if r["decision"] == "rejected" and r["jet_accepted"] != r["jet_before"]:
+        e.append("jet_accepted: must equal jet_before when rejected")
+    if r["before_end_us"] < r["before_start_us"]:
+        e.append("before_end_us: before window ends before it starts")
+    if r["afr_target_hi"] < r["afr_target_lo"]:
+        e.append("afr_target_hi: below afr_target_lo")
+    present = [k for k in _AFTER if r.get(k) is not None]
+    if r["phase"] == "proposed" and present:
+        e.append(f"phase: proposed record must not carry after-swap fields ({present[0]})")
+    if r["phase"] == "evaluated":
+        missing = [k for k in _AFTER if r.get(k) is None]
+        if missing:
+            e.append(f"{missing[0]}: required when phase=evaluated")
+        elif r["decision"] == "rejected":
+            e.append("phase: a rejected proposal cannot be evaluated (no swap was advised)")
+        else:
+            if not (r["before_end_us"] <= r["swap_declared_us"] <= r["after_start_us"] <= r["after_end_us"]):
+                e.append("after_start_us: windows must be ordered before < swap <= after")
+            if abs(r["afr_delta"] - (r["afr_after_mean"] - r["afr_before_mean"])) > 0.011:
+                e.append("afr_delta: must equal afr_after_mean - afr_before_mean")
+    return e
 
 
 def validate_stream(records) -> dict:

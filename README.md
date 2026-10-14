@@ -2,9 +2,33 @@
 
 Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
 
-## Status
+## Current Status (2026-10-13)
 
-Scaffold only. Firmware not yet written.
+- ✅ Speeduino added as a submodule at `third_party/speeduino`, pinned to upstream tag `202501` (`29bdaa3`). Clone with `--recurse-submodules`.
+- ✅ `pio run -e teensy41` builds cleanly from the pinned submodule. It hasn't been flashed to hardware yet.
+- ✅ Teensy log schema v0.1 is drafted.
+- ✅ Zero-hardware Ardu-Stim bench procedure is written. Ardu-Stim's `nano` build is verified; the hardware loop hasn't been run yet.
+- ⏳ No custom firmware, pin map, or AI code yet. AI is advisory only in v1.
+- Grok Pilot work is tracked in issues #1–#6 (below).
+
+### Docs
+- [Open-source audit](docs/OPEN_SOURCE_AUDIT.md)
+- [AI auto-tune architecture](docs/AI_AUTOTUNE_ARCHITECTURE.md)
+- [AI tuning safety](docs/AI_TUNING_SAFETY.md)
+- [Three-tier architecture](docs/three-tier-architecture.md)
+- [Grok Pilot vision](docs/grok-pilot-vision.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Fork notes (Speeduino, marine notes)](docs/FORK-NOTES.md)
+- [Data schema (Teensy logs)](docs/DATA-SCHEMA.md)
+- [Ardu-Stim bench](docs/ARDU-STIM-BENCH.md)
+
+### Issues
+- [#1 Speeduino submodule + Ardu-Stim bench loop](https://github.com/Nicequantum/ahanu-ecu/issues/1)
+- [#2 Validation envelope implementation](https://github.com/Nicequantum/ahanu-ecu/issues/2)
+- [#3 Staged curriculum state machine](https://github.com/Nicequantum/ahanu-ecu/issues/3)
+- [#4 Dual-wideband cross-check + audit trail](https://github.com/Nicequantum/ahanu-ecu/issues/4)
+- [#5 Watchdog Teensy spec](https://github.com/Nicequantum/ahanu-ecu/issues/5)
+- [#6 Grok integration design](https://github.com/Nicequantum/ahanu-ecu/issues/6)
 
 ## Architecture
 

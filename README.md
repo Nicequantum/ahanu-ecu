@@ -24,7 +24,7 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
   - Results: 28 GoogleTest tests pass; the cross-check against Python-generated vectors gives 6,543 steps with **0 mismatches**; the Teensy 4.1 PlatformIO build compiles.
   - Not yet wired into Speeduino's map-write path. That needs a fork (#11). See [ENVELOPE-CPP-PORT](docs/ENVELOPE-CPP-PORT.md).
 - ⚠️ **Wideband UART divider corrected** to 10k top / 20k bottom (≈ 3.33 V). The old 10k/2k gave ≈ 0.83 V. This is a pending hardware change; see [WIRING-NOTES](docs/WIRING-NOTES.md) and #4.
-- 📱 iOS prototype branch: _TODO (user to fill in)_
+- 📱 iOS prototype on branch `prototype/ios-dash`, draft PR [#18](https://github.com/Nicequantum/ahanu-ecu/pull/18) (do not merge), tracking issue [#17](https://github.com/Nicequantum/ahanu-ecu/issues/17), docs/IOS-PROTOTYPE.md on that branch. Swift core (sim, curriculum, proposal decoding, envelope preview, view-model): 24 tests pass on Linux Swift 6.0.3 and CI. SwiftUI views uncompiled pending Xcode.
 - ⏳ No custom firmware yet. The envelope must still be ported to the Teensy (#7). AI is advisory only in v1.
 - Run the tests: `pip install -e ".[test]" && pytest -q`
 

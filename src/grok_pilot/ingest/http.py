@@ -5,6 +5,7 @@ GET /samples?engine=0&start_us=..&end_us=..&fields=rpm,afr_a&bucket_s=1&agg=avg&
 GET /state?engine=0&t_us=..
 GET /cell_writes?engine=0&start_us=..&end_us=..&decision=rejected
 GET /events?engine=0&start_us=..&end_us=..&event=stage_transition
+GET /jet_changes?engine=0&start_us=..&end_us=..&proposal_id=..   (carb jetting experiments, schema v0.3)
 GET /dashboard
 """
 from __future__ import annotations
@@ -57,6 +58,9 @@ def make_handler(db_path: str):
                 if u.path == "/events":
                     return self._send(200, st.query_events(eng, _int(q, "start_us"), _int(q, "end_us"),
                                                            q.get("event", [None])[0]))
+                if u.path == "/jet_changes":
+                    return self._send(200, st.query_jet_changes(eng, _int(q, "start_us", 0), _int(q, "end_us", 2**63 - 1),
+                                                                _int(q, "proposal_id")))
                 if u.path == "/dashboard":
                     return self._send(200, st.dashboard())
                 return self._send(404, {"error": "not found"})

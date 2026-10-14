@@ -22,7 +22,7 @@ from .reader import read_lines, read_records
 SAMPLE_COLS = [k for k in SCHEMAS["0.2"]["sample"] if k not in ("record_type",)]
 NUMERIC_SAMPLE_COLS = [k for k, f in SCHEMAS["0.2"]["sample"].items() if f.type in ("int", "float", "bool")
                        and k not in ("engine_id", "boot_id", "seq", "timestamp_us")]
-STORE_SCHEMA_VERSION = 1
+STORE_SCHEMA_VERSION = 2  # 2: + jet_changes (schema v0.3). Additive; v1 stores upgrade in place
 
 DDL = f"""
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -52,6 +52,15 @@ CREATE TABLE IF NOT EXISTS events (
   PRIMARY KEY (engine_id, boot_id, seq)
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS events_engine_time ON events (engine_id, timestamp_us);
+CREATE TABLE IF NOT EXISTS jet_changes (
+  engine_id INTEGER NOT NULL, boot_id INTEGER NOT NULL, seq INTEGER NOT NULL,
+  timestamp_us INTEGER NOT NULL, schema_version TEXT NOT NULL, stage TEXT,
+  proposal_id INTEGER, phase TEXT, bank TEXT, jet_before REAL, jet_proposed REAL, jet_accepted REAL,
+  decision TEXT, reject_reason TEXT, afr_before_mean REAL, afr_after_mean REAL, moved_toward_target INTEGER,
+  payload TEXT NOT NULL, record_sha TEXT NOT NULL, source TEXT,
+  PRIMARY KEY (engine_id, boot_id, seq)
+) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS jet_changes_engine_time ON jet_changes (engine_id, timestamp_us);
 CREATE TABLE IF NOT EXISTS record_keys (
   engine_id INTEGER NOT NULL, boot_id INTEGER NOT NULL, seq INTEGER NOT NULL,
   record_type TEXT NOT NULL, record_sha TEXT NOT NULL,
@@ -95,7 +104,9 @@ class Store:
             self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA synchronous=NORMAL")
         self.db.executescript(DDL)
-        self.db.execute("INSERT OR IGNORE INTO meta VALUES ('store_schema_version', ?)", (str(STORE_SCHEMA_VERSION),))
+        self.db.execute("INSERT INTO meta VALUES ('store_schema_version', ?) ON CONFLICT(key) DO UPDATE SET value="
+                        "excluded.value WHERE CAST(value AS INTEGER) < CAST(excluded.value AS INTEGER)",
+                        (str(STORE_SCHEMA_VERSION),))
         self.db.commit()
 
     def close(self):
@@ -126,6 +137,15 @@ class Store:
                  rec["proposal_id"], rec["table"], rec["cell_rpm_idx"], rec["cell_map_idx"], rec["value_before"],
                  rec["value_proposed"], rec["value_accepted"], rec["decision"], rec["reject_reason"],
                  json.dumps(rec, sort_keys=True), sha, source))
+        elif rt == "jet_change":
+            mt = rec.get("moved_toward_target")
+            cur = self.db.execute(
+                "INSERT OR IGNORE INTO jet_changes VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (rec["engine_id"], rec["boot_id"], rec["seq"], rec["timestamp_us"], rec["schema_version"], rec["stage"],
+                 rec["proposal_id"], rec["phase"], rec["bank"], rec["jet_before"], rec["jet_proposed"],
+                 rec["jet_accepted"], rec["decision"], rec["reject_reason"], rec["afr_before_mean"],
+                 rec.get("afr_after_mean"), None if mt is None else int(mt), json.dumps(rec, sort_keys=True), sha,
+                 source))
         else:
             cur = self.db.execute("INSERT OR IGNORE INTO events VALUES (?,?,?,?,?,?,?,?,?,?)",
                                   (rec["engine_id"], rec["boot_id"], rec["seq"], rec["timestamp_us"],
@@ -254,6 +274,16 @@ class Store:
             sql += " AND event = ?"; args.append(event)
         return [json.loads(r[0]) for r in self.db.execute(sql + " ORDER BY timestamp_us, engine_id, seq", args)]
 
+    def query_jet_changes(self, engine_id: Optional[int], start_us: int, end_us: int,
+                          proposal_id: Optional[int] = None) -> list:
+        """Carb jetting experiment records (schema v0.3), window [start_us, end_us), full payloads."""
+        q, a = "SELECT payload FROM jet_changes WHERE timestamp_us >= ? AND timestamp_us < ?", [start_us, end_us]
+        if engine_id is not None:
+            q, a = q + " AND engine_id = ?", a + [engine_id]
+        if proposal_id is not None:
+            q, a = q + " AND proposal_id = ?", a + [proposal_id]
+        return [json.loads(r[0]) for r in self.db.execute(q + " ORDER BY engine_id, timestamp_us, seq", a)]
+
     def time_range(self, engine_id: Optional[int] = None):
         sql, args = "SELECT MIN(timestamp_us), MAX(timestamp_us), COUNT(*) FROM samples", []
         if engine_id is not None:
@@ -282,6 +312,10 @@ class Store:
             "SELECT engine_id, timestamp_us, proposal_id, tbl, cell_rpm_idx, cell_map_idx, value_before, value_proposed, reject_reason "
             "FROM cell_writes WHERE decision='rejected' AND timestamp_us>=? AND timestamp_us<? ORDER BY timestamp_us DESC LIMIT 10",
             (start_us, end_us))]
+        jets = [dict(r) for r in self.db.execute(
+            "SELECT engine_id, bank, phase, decision, reject_reason, COUNT(*) AS n, SUM(moved_toward_target) AS moved_toward "
+            "FROM jet_changes WHERE timestamp_us>=? AND timestamp_us<? GROUP BY engine_id, bank, phase, decision, reject_reason "
+            "ORDER BY engine_id, bank, phase", (start_us, end_us))]
         q = self.db.execute("SELECT reason, COUNT(*) FROM quarantine GROUP BY reason").fetchall()
         return {"window": {"start_us": start_us, "end_us": end_us}, "stages": stages, "decisions": decisions,
-                "last_rejects": rejects, "quarantine": {r[0]: r[1] for r in q}}
+                "last_rejects": rejects, "jet_changes": jets, "quarantine": {r[0]: r[1] for r in q}}

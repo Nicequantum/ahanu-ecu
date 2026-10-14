@@ -1,4 +1,4 @@
-# Teensy Log Schema (v0.1 draft)
+# Teensy Log Schema (v0.2 draft)
 
 This is the foundation the Mac Studio model trains on. If we log the wrong fields, the model learns garbage. Version this file and bump `schema_version` on every change.
 
@@ -79,3 +79,28 @@ stage_transition (from/to/reason), lean_cut, fault (code), boot, interlock (bilg
 - Stock Speeduino SD logging rate on Teensy 4.1. Unmeasured.
 - Whether wideband B goes into the Teensy (second UART) or into the gateway.
 - Time sync source (GPS from NMEA 2000 vs RTC).
+
+
+## v0.2 changes (2026-10-13)
+
+The synthetic stress test justifies these. See [SCHEMA-STRESS-TEST.md](SCHEMA-STRESS-TEST.md). The machine-readable definition, and the validator, live in `src/grok_pilot/schema.py`. v0.1 stays defined there for comparison.
+
+**`sample` additions:**
+
+| Field | Type | Units | Why |
+|---|---|---|---|
+| afr_target | float | AFR | Commanded target, needed for the error signal |
+| ego_correction_pct | float | % | Measured AFR is post-trim |
+| warmup_enrich_pct | float | % | 29 % of synthetic AFR samples are enriched; otherwise this confounds VE |
+| accel_enrich_active | bool | — | Exclude transients |
+| sync_loss_count | int | count | Trigger integrity |
+| status | enum | green/yellow/red | Train on green only |
+
+**Other changes:**
+- `oil_alarm` and `lean_cut_active` are now **required**. `egt_c` and `oil_press_kpa` stay optional.
+- The `stage` enum is now `cold_start, warm_idle, cruise, load_test, street, aborted`. In v0.1 `load_test` was called `load`.
+- **`cell_write`:** adds `request_id` (links to the Grok request) and `afr_b_mean`. New `reject_reason` values: `spark_limit, ve_limit, invalid_value, off_table, wrong_engine, stale_timestamp, stale_basis, learning_frozen`.
+- **`event`:** adds `status_change, learning_frozen, operator_reset`.
+- Header `seq` is required everywhere and must be strictly increasing per (engine_id, boot_id).
+
+All v0.2 rates and resolutions are still TARGETS (see the top of this document).

@@ -1,0 +1,23 @@
+[project]
+name = "grok-pilot"
+version = "0.1.0"
+description = "Grok Pilot software-only logic: log schema, synthetic logs, curriculum, validation envelope"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=7", "jsonschema>=4"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+grok_pilot = ["schemas/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

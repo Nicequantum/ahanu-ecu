@@ -28,7 +28,7 @@ None of this can live in this repo alone, because every option touches upstream 
 
 ## Merging upstream into grok-pilot (notes)
 - Merge **release tags only**, never `master`: `git merge --no-ff <tag>` on a `sync/<tag>` branch, then PR into `grok-pilot`.
-- Hot spots for conflicts are `speeduino/comms.cpp` (the `'Y'` case and one include) and `.github/workflows/`. Everything else is new files (`speeduino/grok_pilot/`, `grok_pilot_glue.*`, `test/grok_pilot_native/`).
+- Hot spots for conflicts are `speeduino/comms.cpp` (the `'Y'` case and one include) and `.github/workflows/`. Everything else is new files (`speeduino/src/grok_pilot/`, `grok_pilot_glue.*`, `test/grok_pilot_native/`).
 - After each merge:
   1. **Re-check that `'Y'` is still unused** in `comms.cpp`, `comms_legacy.cpp` and `reference/speeduino.ini`.
   2. Re-check page numbers (`pages.h`: VE 2, ign 3, AFR 5), table encodings in `speeduino.ini`, `OFFSET_IGNITION`, and the `setPageValue`/`getPageValue`/`isEepromWritePending` signatures.

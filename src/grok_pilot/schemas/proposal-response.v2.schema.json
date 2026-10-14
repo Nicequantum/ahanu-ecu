@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Nicequantum/ahanu-ecu/schemas/proposal-response.v2.schema.json",
+  "title": "Grok Pilot proposal response v2 (adds engine_room_mode + optional jetting advice)",
+  "description": "What the model (iPhone on-device or Mac Studio/cloud) returns. Advisory only: every proposal still passes the deterministic envelope on the Teensy, and every one gets logged as a cell_write with its decision. v2 (2026-10-14): v1 is additionalProperties:false, so adding fields needs a new version. v2 adds a required engine_room_mode echo and an optional `jetting` object (carb mode only). Jetting is advice to a human; nothing is written to the carburetor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "request_id",
+    "model_version",
+    "engine_id",
+    "stage",
+    "mode",
+    "proposals",
+    "explanation",
+    "anomalies",
+    "engine_room_mode"
+  ],
+  "properties": {
+    "schema": {
+      "const": "grok-pilot.proposal-response.v2"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "model_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "engine_id": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "stage": {
+      "enum": [
+        "cold_start",
+        "warm_idle",
+        "cruise",
+        "load_test",
+        "street",
+        "aborted",
+        "carb_jetting"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "copilot",
+        "autopilot"
+      ],
+      "description": "v1: only copilot is accepted by the gateway."
+    },
+    "proposals": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "table",
+          "rpm_idx",
+          "map_idx",
+          "value_before",
+          "value_proposed",
+          "evidence_samples",
+          "confidence",
+          "rationale"
+        ],
+        "properties": {
+          "table": {
+            "enum": [
+              "ve",
+              "spark",
+              "afr_target"
+            ]
+          },
+          "rpm_idx": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 15
+          },
+          "map_idx": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 15
+          },
+          "value_before": {
+            "type": "number"
+          },
+          "value_proposed": {
+            "type": "number"
+          },
+          "evidence_samples": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "rationale": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      }
+    },
+    "stage_recommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "reason"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "hold",
+            "advance",
+            "regress",
+            "abort"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "explanation": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Plain-language summary for the operator."
+    },
+    "anomalies": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "severity",
+          "code",
+          "message"
+        ],
+        "properties": {
+          "severity": {
+            "enum": [
+              "info",
+              "warn",
+              "critical"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      }
+    },
+    "engine_room_mode": {
+      "enum": [
+        "efi",
+        "carb"
+      ],
+      "description": "Echo of the request. In carb mode, proposals may only target the spark table."
+    },
+    "jetting": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "table",
+        "bank",
+        "current_size",
+        "proposed_size",
+        "rod",
+        "spring",
+        "rationale"
+      ],
+      "properties": {
+        "table": {
+          "const": "jet"
+        },
+        "bank": {
+          "enum": [
+            "primary",
+            "secondary"
+          ]
+        },
+        "current_size": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 0.2,
+          "description": "Installed jet orifice, inches (e.g. 0.113)."
+        },
+        "proposed_size": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 0.2
+        },
+        "rod": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Installed metering rod, e.g. 0.071x0.047 (context; not changed)."
+        },
+        "spring": {
+          "enum": [
+            "blue",
+            "yellow",
+            "orange",
+            "pink",
+            "silver"
+          ]
+        },
+        "evidence_samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rationale": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    }
+  }
+}

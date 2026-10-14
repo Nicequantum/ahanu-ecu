@@ -4,12 +4,16 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
 
 ## Current Status (2026-10-13)
 
-- ✅ Speeduino added as a submodule at `third_party/speeduino`, pinned to upstream tag `202501` (`29bdaa3`). Clone with `--recurse-submodules`.
-- ✅ `pio run -e teensy41` builds cleanly from the pinned submodule. It hasn't been flashed to hardware yet.
-- ✅ Teensy log schema v0.1 is drafted.
-- ✅ Zero-hardware Ardu-Stim bench procedure is written. Ardu-Stim's `nano` build is verified; the hardware loop hasn't been run yet.
-- ⏳ No custom firmware, pin map, or AI code yet. AI is advisory only in v1.
-- Grok Pilot work is tracked in issues #1–#6 (below).
+- ✅ Speeduino is a submodule at `third_party/speeduino`, pinned to upstream tag `202501` (`29bdaa3`). Clone with `--recurse-submodules`. `pio run -e teensy41` builds; not yet flashed to hardware.
+- ✅ The zero-hardware Ardu-Stim bench procedure is written. The hardware loop is not run yet (no hardware).
+- ✅ **Software-only logic in [`src/grok_pilot`](src/README.md)** (Python, 137 pytest tests, CI in `.github/workflows/python-tests.yml`):
+  - deterministic validation envelope, with adversarial and boundary tests
+  - staged curriculum state machine: cold_start → warm_idle → cruise → load_test, green/yellow/red status, aborts and regressions
+  - log schema v0.2 validator and a synthetic dual-engine log generator ([stress test](docs/SCHEMA-STRESS-TEST.md))
+  - Grok integration API: prompt, context, response JSON Schema, and gateway checks
+- ✅ Teensy log schema is at **v0.2**. All rates and resolutions are still targets.
+- ⏳ No custom firmware yet. The envelope must still be ported to the Teensy (#7). AI is advisory only in v1.
+- Run the tests: `pip install -e ".[test]" && pytest -q`
 
 ### Docs
 - [Open-source audit](docs/OPEN_SOURCE_AUDIT.md)
@@ -21,6 +25,9 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
 - [Fork notes (Speeduino, marine notes)](docs/FORK-NOTES.md)
 - [Data schema (Teensy logs)](docs/DATA-SCHEMA.md)
 - [Ardu-Stim bench](docs/ARDU-STIM-BENCH.md)
+- [Schema stress test](docs/SCHEMA-STRESS-TEST.md)
+- [Grok integration API](docs/GROK-INTEGRATION-API.md) · [response JSON Schema](src/grok_pilot/schemas/proposal-response.v1.schema.json)
+- [Python package README](src/README.md)
 
 ### Issues
 - [#1 Speeduino submodule + Ardu-Stim bench loop](https://github.com/Nicequantum/ahanu-ecu/issues/1)
@@ -29,6 +36,10 @@ Teensy 4.1 ECU firmware for twin Mercruiser 5.7 marine engines.
 - [#4 Dual-wideband cross-check + audit trail](https://github.com/Nicequantum/ahanu-ecu/issues/4)
 - [#5 Watchdog Teensy spec](https://github.com/Nicequantum/ahanu-ecu/issues/5)
 - [#6 Grok integration design](https://github.com/Nicequantum/ahanu-ecu/issues/6)
+- [#7 Port envelope to Teensy firmware + proposal transport](https://github.com/Nicequantum/ahanu-ecu/issues/7)
+- [#8 Schema v0.3 open items](https://github.com/Nicequantum/ahanu-ecu/issues/8)
+- [#9 Calibrate placeholder thresholds from real data](https://github.com/Nicequantum/ahanu-ecu/issues/9)
+- [#10 Per-bank wideband offset model](https://github.com/Nicequantum/ahanu-ecu/issues/10)
 
 ## Architecture
 

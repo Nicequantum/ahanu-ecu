@@ -1,0 +1,15 @@
+name: ios-core
+on:
+  push:
+    paths: ["ios/**", ".github/workflows/ios-core.yml"]
+  pull_request:
+    paths: ["ios/**", ".github/workflows/ios-core.yml"]
+jobs:
+  linux-core:
+    # Builds and tests GrokPilotCore. SwiftUI files compile to nothing on Linux.
+    runs-on: ubuntu-24.04
+    container: swift:6.0.3-noble
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test
+        working-directory: ios/GrokPilotDash

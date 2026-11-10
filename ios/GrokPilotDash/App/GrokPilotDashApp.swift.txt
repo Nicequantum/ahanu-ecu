@@ -1,0 +1,9 @@
+// Drop-in @main for an Xcode iOS app target that depends on the GrokPilotDashUI
+// package product. Kept as .txt so SwiftPM doesn't treat it as a source file.
+import SwiftUI
+import GrokPilotDashUI
+
+@main
+struct GrokPilotDashApp: App {
+    var body: some Scene { WindowGroup { DashRootView() } }
+}
